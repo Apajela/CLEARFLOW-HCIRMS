@@ -1,0 +1,6 @@
+{
+  "name": "MedFlow - Hospital Inventory & FEFO Pharmacy Management System",
+  "description": "Hospital medical inventory and FEFO pharmacy management system with batch expiration tracking, automated stock deductions, security permissions, billing workflows, and bulk stock management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
