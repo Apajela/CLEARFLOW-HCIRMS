@@ -1,0 +1,6 @@
+{
+  "name": "MedFlow Hospital Inventory & FEFO System",
+  "description": "Comprehensive hospital medical inventory management system featuring FEFO automatic release, expired stock blocking, patient consumption tracking, billing, audit logging, and granular role-based security.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
