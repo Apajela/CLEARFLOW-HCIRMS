@@ -2,37 +2,44 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-}
-
 @layer base {
   body {
+    background-color: #f8fafc;
+    color: #0f172a;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+  
+  html.dark body {
+    background-color: #090d16;
+    color: #f1f5f9;
+  }
+}
+
+/* Custom scrollbars for clean clinical tables and grid */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
 }
 
 @media print {
-  body {
-    background: white !important;
-    color: black !important;
-  }
   .no-print {
     display: none !important;
   }
   .print-only {
     display: block !important;
   }
-  .print-card {
-    border: 1px solid #cbd5e1 !important;
-    box-shadow: none !important;
-    break-inside: avoid;
-  }
-}
-
-@media screen {
-  .print-only {
-    display: none !important;
+  body {
+    background: white !important;
+    color: black !important;
   }
 }
