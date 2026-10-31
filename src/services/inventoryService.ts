@@ -138,10 +138,22 @@ return result.data.map((item: any): MedicalItem => ({
   status: item.status,
   lastUpdated: item.last_updated,
 }));
+      
     } catch (error) {
       console.error('Failed to fetch items from API:', error);
       return [];
     }
+  }
+
+  public async refreshItemsFromApi(): Promise<MedicalItem[]> {
+  const apiItems = await this.fetchApiItems();
+
+  if (apiItems.length > 0) {
+    this.items = apiItems;
+    safeSet(KEYS.ITEMS, this.items);
+  }
+
+  return this.getItems();
   }
 
   public async fetchApiBatches(): Promise<BatchLot[]> {
