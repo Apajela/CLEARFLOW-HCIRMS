@@ -103,6 +103,71 @@ class InventoryService {
     this.applyTheme(this.settings.themeMode || 'light');
   }
 
+    // --- CLOUD API: READ DATABASE DATA ---
+
+  public async fetchApiItems(): Promise<MedicalItem[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/items`);
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.status !== 'success') {
+        throw new Error(result.message || 'Failed to load items');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Failed to fetch items from API:', error);
+      return [];
+    }
+  }
+
+  public async fetchApiBatches(): Promise<BatchLot[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/batches`);
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.status !== 'success') {
+        throw new Error(result.message || 'Failed to load batches');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Failed to fetch batches from API:', error);
+      return [];
+    }
+  }
+
+  public async fetchApiTransactions(): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/transactions`);
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.status !== 'success') {
+        throw new Error(result.message || 'Failed to load transactions');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Failed to fetch transactions from API:', error);
+      return [];
+    }
+  }
+  
   // --- THEME ---
   public getTheme(): 'light' | 'dark' {
     return this.settings.themeMode || 'light';
