@@ -15,10 +15,10 @@ export default defineConfig(() => {
     },
 
     preview: {
-      host: '0.0.0.0',
-      port: Number(process.env.PORT) || 4173,
-      allowedHosts: true,
-    },
+  host: '0.0.0.0',
+  port: Number(process.env.PORT) || 4173,
+  allowedHosts: ['clearflow-hcirms.onrender.com'],
+},
 
     server: {
       host: '0.0.0.0',
