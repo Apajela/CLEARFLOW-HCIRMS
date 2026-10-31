@@ -239,6 +239,30 @@ export interface BillingRecord {
   notes?: string;
 }
 
+
+export type ExpenseCategory =
+  | 'Medical Supplies'
+  | 'Medicines'
+  | 'Utilities'
+  | 'Equipment'
+  | 'Maintenance'
+  | 'Staff / Operations'
+  | 'Other';
+
+export interface ExpenseRecord {
+  id: string;
+  expenseNumber: string;
+  category: ExpenseCategory;
+  description: string;
+  payee: string;
+  amount: number;
+  expenseDate: string;
+  referenceNumber?: string;
+  notes?: string;
+  recordedBy: string;
+  createdAt: string;
+}
+
 export type AuditActionType =
   | 'LOGIN'
   | 'LOGOUT'
