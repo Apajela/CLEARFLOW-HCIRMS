@@ -8,9 +8,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
 
   preview: {
-    host: '0.0.0.0',
-    allowedHosts: ['clearflow-hcirms.onrender.com'],
-  },
+  host: '0.0.0.0',
+  port: Number(process.env.PORT) || 4173,
+  allowedHosts: true,
+},
 
   server: {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
