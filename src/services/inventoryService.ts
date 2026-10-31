@@ -116,10 +116,19 @@ class InventoryService {
       const result = await response.json();
 
       if (result.status !== 'success') {
-        throw new Error(result.message || 'Failed to load items');
-      }
+  throw new Error(result.message || 'Failed to load items');
+}
 
-      return result.data;
+return result.data.map((item: any): MedicalItem => ({
+  ...item,
+  conversionFactor: Number(item.conversionFactor),
+  totalStock: Number(item.totalStock),
+  minimumStock: Number(item.minimumStock),
+  reorderLevel: Number(item.reorderLevel),
+  unitCost: Number(item.unitCost),
+  unitPrice: Number(item.unitPrice),
+  lastUpdated: item.lastUpdated,
+}));
     } catch (error) {
       console.error('Failed to fetch items from API:', error);
       return [];
