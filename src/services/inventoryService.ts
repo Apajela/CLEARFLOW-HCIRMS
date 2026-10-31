@@ -32,6 +32,8 @@ import {
 
 const CURRENT_SIMULATED_DATE = '2026-10-29';
 
+const API_BASE_URL = 'https://clearflow-api-v2.paguyoddon.workers.dev';
+
 // Storage Keys
 const KEYS = {
   USERS: 'medflow_users_v2',
