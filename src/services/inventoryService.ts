@@ -120,14 +120,23 @@ class InventoryService {
 }
 
 return result.data.map((item: any): MedicalItem => ({
-  ...item,
-  conversionFactor: Number(item.conversionFactor),
-  totalStock: Number(item.totalStock),
-  minimumStock: Number(item.minimumStock),
-  reorderLevel: Number(item.reorderLevel),
-  unitCost: Number(item.unitCost),
-  unitPrice: Number(item.unitPrice),
-  lastUpdated: item.lastUpdated,
+  id: item.id,
+  itemCode: item.item_code,
+  name: item.name,
+  genericName: item.generic_name,
+  category: item.category,
+  form: item.form,
+  primaryUnit: item.primary_unit,
+  secondaryUnit: item.secondary_unit,
+  conversionFactor: Number(item.conversion_factor),
+  totalStock: Number(item.total_stock),
+  minimumStock: Number(item.minimum_stock),
+  reorderLevel: Number(item.reorder_level),
+  unitCost: Number(item.unit_cost),
+  unitPrice: Number(item.unit_price),
+  locationShelf: item.location_shelf,
+  status: item.status,
+  lastUpdated: item.last_updated,
 }));
     } catch (error) {
       console.error('Failed to fetch items from API:', error);
