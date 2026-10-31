@@ -149,7 +149,15 @@ return result.data.map((item: any): MedicalItem => ({
         throw new Error(result.message || 'Failed to load batches');
       }
 
-      return result.data;
+return result.data.map((batch: any): BatchLot => ({
+  ...batch,
+  quantity: Number(batch.quantity),
+  originalQuantity: Number(batch.originalQuantity),
+  unitCost: Number(batch.unitCost),
+  unitPrice: Number(batch.unitPrice),
+  status: String(batch.status).toLowerCase() as BatchLot['status'],
+}));
+      
     } catch (error) {
       console.error('Failed to fetch batches from API:', error);
       return [];
