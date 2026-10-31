@@ -8,6 +8,7 @@ import {
   PatientUsageRecord,
   StockAdjustmentRecord,
   BillingRecord,
+  ExpenseRecord,
   AuditLog,
   HospitalMasterSettings,
   PermissionKey,
@@ -44,6 +45,7 @@ const KEYS = {
   PATIENT_USAGE: 'medflow_patient_usage_v2',
   ADJUSTMENTS: 'medflow_adjustments_v2',
   BILLING: 'medflow_billing_v2',
+  EXPENSES: 'medflow_expenses_v1',
   AUDIT: 'medflow_audit_logs_v2'
 };
 
@@ -77,6 +79,7 @@ class InventoryService {
   private patientUsages: PatientUsageRecord[];
   private adjustments: StockAdjustmentRecord[];
   private billings: BillingRecord[];
+  private expenses: ExpenseRecord[];
   private audits: AuditLog[];
 
   constructor() {
@@ -91,6 +94,7 @@ class InventoryService {
     this.patientUsages = safeGet(KEYS.PATIENT_USAGE, INITIAL_PATIENT_USAGE);
     this.adjustments = safeGet(KEYS.ADJUSTMENTS, INITIAL_ADJUSTMENTS);
     this.billings = safeGet(KEYS.BILLING, INITIAL_BILLING_RECORDS);
+    this.expenses = safeGet(KEYS.EXPENSES, []);
     this.audits = safeGet(KEYS.AUDIT, INITIAL_AUDIT_LOGS);
 
     // Apply theme on initial load
@@ -486,21 +490,21 @@ class InventoryService {
     safeSet(KEYS.BATCHES, this.batches);
     safeSet(KEYS.STOCK_IN, this.stockIns);
 
-    // Generate Supplier Accounts Payable bill
-    const apBill: BillingRecord = {
-      id: `bill-${Date.now()}`,
-      invoiceNumber: `AP-${newRecord.drNumber}`,
-      type: 'Supplier Payable',
-      referenceNumber: newRecord.drNumber,
-      entityName: newRecord.supplierName,
+    // Record the actual stock purchase as an expense; no billing/payable balance is created.
+    this.expenses.unshift({
+      id: `exp-${newRecord.id}`,
+      expenseNumber: `EXP-${newRecord.drNumber}`,
+      category: 'Medical Supplies',
+      description: `Inventory purchase (${newRecord.items.length} item lines)`,
+      payee: newRecord.supplierName,
       amount: newRecord.totalCost,
-      dueDate: '2026-11-30',
-      status: 'Pending',
-      createdDate: CURRENT_SIMULATED_DATE,
-      notes: `Receiving DR #${newRecord.drNumber} (PO #${newRecord.poNumber})`
-    };
-    this.billings.unshift(apBill);
-    safeSet(KEYS.BILLING, this.billings);
+      expenseDate: newRecord.receivedDate.slice(0, 10),
+      referenceNumber: newRecord.drNumber,
+      notes: `Stock received under PO #${newRecord.poNumber}`,
+      recordedBy: newRecord.receivedBy,
+      createdAt: new Date().toISOString()
+    });
+    safeSet(KEYS.EXPENSES, this.expenses);
 
     this.addAuditLog('STOCK_IN', `DR: ${newRecord.drNumber}`, `Received ${newRecord.items.length} items from ${newRecord.supplierName} (Total ₱${newRecord.totalCost.toLocaleString()})`);
     return newRecord;
@@ -658,23 +662,9 @@ class InventoryService {
     safeSet(KEYS.ITEMS, this.items);
     safeSet(KEYS.PATIENT_USAGE, this.patientUsages);
 
-    // Auto-generate Patient Billing Folio charge
-    const patBill: BillingRecord = {
-      id: `bill-${Date.now()}`,
-      invoiceNumber: `INV-${newRecord.recordNumber}`,
-      type: 'Patient Billing',
-      referenceNumber: newRecord.recordNumber,
-      entityName: `${newRecord.patientName} (${newRecord.roomBed})`,
-      amount: newRecord.totalBillAmount,
-      dueDate: '2026-11-05',
-      status: 'Billed',
-      createdDate: CURRENT_SIMULATED_DATE,
-      notes: `Bedside administration for ${newRecord.diagnosis}`
-    };
-    this.billings.unshift(patBill);
-    safeSet(KEYS.BILLING, this.billings);
+    // Patient consumption is tracked clinically; no patient billing charge is generated.
 
-    this.addAuditLog('PATIENT_USAGE', `Patient: ${newRecord.patientName}`, `Administered medications to ${newRecord.patientName} (${newRecord.wardLocation}) - Folio ₱${newRecord.totalBillAmount.toLocaleString()}`);
+    this.addAuditLog('PATIENT_USAGE', `Patient: ${newRecord.patientName}`, `Recorded medication consumption for ${newRecord.patientName} (${newRecord.wardLocation}); no billing charge created.`);
     return newRecord;
   }
 
@@ -1051,18 +1041,26 @@ class InventoryService {
     return { deletedCount, blockedCount };
   }
 
-  // --- BILLING & FINANCE ---
-  public getBillingRecords(): BillingRecord[] {
-    return [...this.billings];
+  // --- FINANCE: EXPENSE MONITORING ---
+  public getExpenseRecords(): ExpenseRecord[] {
+    return [...this.expenses].sort((a, b) => b.expenseDate.localeCompare(a.expenseDate));
   }
 
-  public updateBillingStatus(id: string, status: BillingRecord['status']): void {
-    this.assertPermission('billing_finance', 'update billing status');
-    const bill = this.billings.find(b => b.id === id);
-    if (!bill) throw new Error('Billing record not found');
-    bill.status = status;
-    safeSet(KEYS.BILLING, this.billings);
-    this.addAuditLog('ITEM_MUTATION', `Invoice: ${bill.invoiceNumber}`, `Updated billing status to ${status} (₱${bill.amount.toLocaleString()})`);
+  public addExpense(data: Omit<ExpenseRecord, 'id' | 'expenseNumber' | 'recordedBy' | 'createdAt'>): ExpenseRecord {
+    this.assertPermission('billing_finance', 'record an expense');
+    if (!data.description.trim()) throw new Error('Please enter an expense description.');
+    if (!Number.isFinite(data.amount) || data.amount <= 0) throw new Error('Expense amount must be greater than zero.');
+    const record: ExpenseRecord = {
+      ...data,
+      id: `exp-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      expenseNumber: `EXP-${Date.now()}`,
+      recordedBy: this.currentUser?.fullName || 'System',
+      createdAt: new Date().toISOString()
+    };
+    this.expenses.unshift(record);
+    safeSet(KEYS.EXPENSES, this.expenses);
+    this.addAuditLog('ITEM_MUTATION', record.expenseNumber, `Recorded ${record.category} expense: ₱${record.amount.toLocaleString()}`);
+    return record;
   }
 
   public getStockValuation(): {
@@ -1243,6 +1241,7 @@ class InventoryService {
         patientUsages: this.patientUsages,
         adjustments: this.adjustments,
         billings: this.billings,
+        expenses: this.expenses,
         audits: this.audits
       }
     };
@@ -1266,7 +1265,8 @@ class InventoryService {
     this.releases = parsed.data.releases || [];
     this.patientUsages = parsed.data.patientUsages || [];
     this.adjustments = parsed.data.adjustments || [];
-    this.billings = parsed.data.billings || [];
+    this.billings = parsed.data.billings || this.billings;
+    this.expenses = parsed.data.expenses || this.expenses;
     this.audits = parsed.data.audits || [];
 
     safeSet(KEYS.USERS, this.users);
@@ -1279,6 +1279,7 @@ class InventoryService {
     safeSet(KEYS.PATIENT_USAGE, this.patientUsages);
     safeSet(KEYS.ADJUSTMENTS, this.adjustments);
     safeSet(KEYS.BILLING, this.billings);
+    safeSet(KEYS.EXPENSES, this.expenses);
     safeSet(KEYS.AUDIT, this.audits);
 
     this.addAuditLog('BACKUP_RESTORE', 'Database Restore', 'Successfully restored database snapshot from file');
@@ -1296,6 +1297,7 @@ class InventoryService {
     this.patientUsages = [...INITIAL_PATIENT_USAGE];
     this.adjustments = [...INITIAL_ADJUSTMENTS];
     this.billings = [...INITIAL_BILLING_RECORDS];
+    this.expenses = [];
     this.audits = [...INITIAL_AUDIT_LOGS];
 
     safeSet(KEYS.USERS, this.users);
@@ -1308,6 +1310,7 @@ class InventoryService {
     safeSet(KEYS.PATIENT_USAGE, this.patientUsages);
     safeSet(KEYS.ADJUSTMENTS, this.adjustments);
     safeSet(KEYS.BILLING, this.billings);
+    safeSet(KEYS.EXPENSES, this.expenses);
     safeSet(KEYS.AUDIT, this.audits);
 
     this.addAuditLog('BACKUP_RESTORE', 'System Reset', 'Reset database to October 2026 baseline demonstration data');
