@@ -7,7 +7,7 @@ import {
   Send,
   UserCheck,
   SlidersHorizontal,
-  CreditCard,
+  Wallet,
   BarChart3,
   FileText,
   Users,
@@ -113,8 +113,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'billing_finance',
-      label: 'Billing & Finance',
-      icon: CreditCard,
+      label: 'Finance – Expenses',
+      icon: Wallet,
       permission: 'billing_finance',
       section: 'Financial & Audits'
     },
