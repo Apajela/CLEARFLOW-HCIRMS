@@ -199,7 +199,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               ₱{valuation.totalCostValuation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Retail Patient Value: ₱{valuation.totalRetailValuation.toLocaleString()}
+              Inventory acquisition value (based on unit cost)
             </p>
           </div>
         </div>

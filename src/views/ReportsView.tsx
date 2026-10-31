@@ -57,15 +57,14 @@ export const ReportsView: React.FC = () => {
       }));
     } else {
       title = 'Inpatient Bedside Medication Consumption Audit';
-      headers = ['Patient Name & ID', 'Location / Bed', 'Administered Drug', 'Batch #', 'Qty', 'Folio Amount'];
+      headers = ['Patient Name & ID', 'Location / Bed', 'Administered Drug', 'Batch #', 'Qty'];
       itemsRows = usages.flatMap(u =>
         u.items.map(i => ({
           col1: `${u.patientName} (${u.patientId})`,
           col2: `${u.wardLocation} - ${u.roomBed}`,
           col3: i.itemName,
           col4: i.batchNumber,
-          col5: `${i.quantity} ${i.unit}`,
-          col6: `₱${i.totalAmount.toFixed(2)}`
+          col5: `${i.quantity} ${i.unit}`
         }))
       );
     }
@@ -266,7 +265,6 @@ export const ReportsView: React.FC = () => {
                   <th className="p-3">Ward Location & Room</th>
                   <th className="p-3">Attending Doctor</th>
                   <th className="p-3">Medication Consumed</th>
-                  <th className="p-3 text-right">Charge Amount</th>
                   <th className="p-3">Date</th>
                 </tr>
               </thead>
@@ -284,9 +282,6 @@ export const ReportsView: React.FC = () => {
                           {i.itemName} ({i.quantity} {i.unit})
                         </div>
                       ))}
-                    </td>
-                    <td className="p-3 text-right font-mono font-bold text-teal-600">
-                      ₱{u.totalBillAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="p-3 font-mono text-slate-500 text-[11px]">
                       {new Date(u.administeredDate).toLocaleDateString()}

@@ -67,19 +67,16 @@ export const PatientUsageView: React.FC = () => {
     }
 
     try {
-      let totalBill = 0;
       const formattedItems = usageItems.map(ui => {
         const item = items.find(i => i.id === ui.itemId)!;
-        const subtotal = item.unitPrice * (Number(ui.quantity) || 1);
-        totalBill += subtotal;
         return {
           itemId: item.id,
           itemName: item.name,
           batchNumber: ui.batchNumber || 'STANDARD',
           quantity: Number(ui.quantity) || 1,
           unit: item.primaryUnit,
-          unitPrice: item.unitPrice,
-          totalAmount: subtotal
+          unitPrice: 0,
+          totalAmount: 0
         };
       });
 
@@ -92,8 +89,8 @@ export const PatientUsageView: React.FC = () => {
         diagnosis,
         administeredBy: currentUser?.fullName || 'Ward Nurse',
         items: formattedItems,
-        totalBillAmount: totalBill,
-        billingStatus: 'Billed'
+        totalBillAmount: 0,
+        billingStatus: 'HMO Cleared'
       });
 
       refreshList();
@@ -106,22 +103,20 @@ export const PatientUsageView: React.FC = () => {
 
   const handlePrintMAR = (rec: PatientUsageRecord) => {
     const docData: PrintDocumentData = {
-      title: 'Medication Administration Record & Patient Billing Folio',
+      title: 'Medication Administration Record',
       docNumber: rec.recordNumber,
       date: new Date(rec.administeredDate).toLocaleString(),
       departmentOrWard: `${rec.wardLocation} · ${rec.roomBed}`,
       preparedBy: rec.administeredBy,
       verifiedBy: rec.attendingPhysician,
-      columnHeaders: ['Administered Medication', 'Batch Lot #', 'Quantity / Unit', 'Unit Price', 'Folio Charge'],
+      columnHeaders: ['Administered Medication', 'Batch Lot #', 'Notes', 'Quantity / Unit'],
       items: rec.items.map(i => ({
         col1: i.itemName,
         col2: i.batchNumber,
-        col3: `${i.quantity} ${i.unit}`,
-        col4: `₱${i.unitPrice.toFixed(2)}`,
-        col5: `₱${i.totalAmount.toFixed(2)}`
+        col3: 'Clinical consumption',
+        col4: `${i.quantity} ${i.unit}`
       })),
-      totalAmountText: `₱${rec.totalBillAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      summaryNotes: `Patient: ${rec.patientName} (ID: ${rec.patientId}). Diagnosis: ${rec.diagnosis}. Folio status: ${rec.billingStatus}`
+      summaryNotes: `Patient: ${rec.patientName} (ID: ${rec.patientId}). Diagnosis: ${rec.diagnosis}. Clinical consumption record only; no billing.`
     };
     setPrintDoc(docData);
   };
@@ -137,7 +132,7 @@ export const PatientUsageView: React.FC = () => {
             Patient Medication Consumption & Administration
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Track bedside drug usage by room/bed, attending physician, and generate patient hospital billing charges.
+            Track bedside medication usage by room/bed and attending physician for clinical documentation only.
           </p>
         </div>
 
@@ -163,8 +158,6 @@ export const PatientUsageView: React.FC = () => {
                 <th className="p-3">Room / Bed</th>
                 <th className="p-3">Attending Doctor</th>
                 <th className="p-3">Medications Administered</th>
-                <th className="p-3 text-right">Folio Charge</th>
-                <th className="p-3">Billing Status</th>
                 <th className="p-3 text-center">Print MAR</th>
               </tr>
             </thead>
@@ -189,14 +182,6 @@ export const PatientUsageView: React.FC = () => {
                         <span className="font-mono text-slate-500">Lot: {i.batchNumber}</span>
                       </div>
                     ))}
-                  </td>
-                  <td className="p-3 text-right font-mono font-bold text-teal-600 dark:text-teal-400">
-                    ₱{u.totalBillAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                  <td className="p-3">
-                    <span className="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                      {u.billingStatus}
-                    </span>
                   </td>
                   <td className="p-3 text-center">
                     <button
@@ -391,7 +376,7 @@ export const PatientUsageView: React.FC = () => {
                   type="submit"
                   className="px-5 py-2 font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-sm"
                 >
-                  Post Administration & Billing
+                  Save Administration Record
                 </button>
               </div>
             </form>

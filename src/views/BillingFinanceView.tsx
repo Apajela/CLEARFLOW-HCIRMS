@@ -1,175 +1,161 @@
-import React, { useState } from 'react';
-import { CreditCard, DollarSign, ArrowUpRight, ArrowDownLeft, CheckCircle2, Search, Filter } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Wallet, Plus, ReceiptText, TrendingDown } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
-import { BillingRecord } from '../types/inventory';
+import { ExpenseCategory, ExpenseRecord } from '../types/inventory';
+
+const CATEGORIES: ExpenseCategory[] = [
+  'Medical Supplies', 'Medicines', 'Utilities', 'Equipment',
+  'Maintenance', 'Staff / Operations', 'Other'
+];
+
+const money = (value: number) => `₱${value.toLocaleString('en-PH', {
+  minimumFractionDigits: 2, maximumFractionDigits: 2
+})}`;
 
 export const BillingFinanceView: React.FC = () => {
-  const [billings, setBillings] = useState<BillingRecord[]>(() => inventoryService.getBillingRecords());
-  const [filterType, setFilterType] = useState<'ALL' | 'Patient Billing' | 'Supplier Payable'>('ALL');
-  const valuation = inventoryService.getStockValuation();
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => inventoryService.getExpenseRecords());
+  const [showForm, setShowForm] = useState(false);
+  const [category, setCategory] = useState<ExpenseCategory>('Other');
+  const [description, setDescription] = useState('');
+  const [payee, setPayee] = useState('');
+  const [amount, setAmount] = useState('');
+  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().slice(0, 10));
+  const [referenceNumber, setReferenceNumber] = useState('');
+  const [notes, setNotes] = useState('');
 
-  const refreshList = () => {
-    setBillings(inventoryService.getBillingRecords());
-  };
+  const refresh = () => setExpenses(inventoryService.getExpenseRecords());
+  const total = expenses.reduce((sum, item) => sum + item.amount, 0);
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  const monthlyTotal = expenses
+    .filter(item => item.expenseDate.startsWith(thisMonth))
+    .reduce((sum, item) => sum + item.amount, 0);
+  const categoryTotals = useMemo(() => CATEGORIES.map(name => ({
+    name,
+    total: expenses.filter(item => item.category === name).reduce((sum, item) => sum + item.amount, 0)
+  })).filter(item => item.total > 0), [expenses]);
 
-  const filteredBills = billings.filter(b => filterType === 'ALL' || b.type === filterType);
-
-  const handleUpdateStatus = (id: string, status: BillingRecord['status']) => {
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
     try {
-      inventoryService.updateBillingStatus(id, status);
-      refreshList();
-    } catch (err: any) {
-      alert(err.message || 'Failed to update billing status');
+      inventoryService.addExpense({
+        category,
+        description: description.trim(),
+        payee: payee.trim() || 'Not specified',
+        amount: Number(amount),
+        expenseDate,
+        referenceNumber: referenceNumber.trim(),
+        notes: notes.trim()
+      });
+      refresh();
+      setDescription('');
+      setPayee('');
+      setAmount('');
+      setReferenceNumber('');
+      setNotes('');
+      setShowForm(false);
+    } catch (error: any) {
+      alert(error.message || 'Unable to save expense.');
     }
   };
 
-  const totalPatientReceivables = billings
-    .filter(b => b.type === 'Patient Billing' && b.status !== 'Paid')
-    .reduce((sum, b) => sum + b.amount, 0);
-
-  const totalSupplierPayables = billings
-    .filter(b => b.type === 'Supplier Payable' && b.status !== 'Paid')
-    .reduce((sum, b) => sum + b.amount, 0);
-
   return (
     <div className="space-y-6">
-      
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-teal-600" />
-            Billing & Hospital Finance Workflows
+            <Wallet className="w-5 h-5 text-teal-600" />
+            Finance – Expense Monitoring
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Patient medication charges, supplier accounts payable ledgers, and real-time inventory valuations.
+            Record and monitor the center's actual expenses. No patient billing or outstanding billing balances.
           </p>
         </div>
+        <button onClick={() => setShowForm(!showForm)}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold">
+          <Plus className="w-4 h-4" /> {showForm ? 'Close Form' : 'Add Expense'}
+        </button>
       </div>
 
-      {/* Financial Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <span>Patient Receivables (Unpaid)</span>
-            <ArrowDownLeft className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
-            ₱{totalPatientReceivables.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <div className="text-[11px] text-slate-400">Inpatient medication administration</div>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+          <div className="text-xs text-slate-500">Total Recorded Expenses</div>
+          <div className="mt-1 text-2xl font-bold font-mono text-slate-900 dark:text-white">{money(total)}</div>
+          <div className="text-[11px] text-slate-400 mt-1">{expenses.length} expense records</div>
         </div>
-
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <span>Supplier Payables (Outstanding)</span>
-            <ArrowUpRight className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-xl font-bold font-mono text-amber-600 dark:text-amber-400">
-            ₱{totalSupplierPayables.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <div className="text-[11px] text-slate-400">Net 30 drug distributor invoices</div>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+          <div className="text-xs text-slate-500">Expenses This Month</div>
+          <div className="mt-1 text-2xl font-bold font-mono text-teal-600">{money(monthlyTotal)}</div>
+          <div className="text-[11px] text-slate-400 mt-1">Based on expense date</div>
         </div>
-
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <span>Total Formulary Asset Value</span>
-            <DollarSign className="w-4 h-4 text-teal-500" />
-          </div>
-          <div className="text-xl font-bold font-mono text-slate-900 dark:text-white">
-            ₱{valuation.totalCostValuation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <div className="text-[11px] text-slate-400">Retail Value: ₱{valuation.totalRetailValuation.toLocaleString()}</div>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+          <div className="flex items-center gap-2 text-xs text-slate-500"><TrendingDown className="w-4 h-4" /> Average Expense</div>
+          <div className="mt-1 text-2xl font-bold font-mono text-slate-900 dark:text-white">{money(expenses.length ? total / expenses.length : 0)}</div>
+          <div className="text-[11px] text-slate-400 mt-1">Per recorded transaction</div>
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg max-w-md text-xs">
-        {(['ALL', 'Patient Billing', 'Supplier Payable'] as const).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setFilterType(tab)}
-            className={`flex-1 py-1.5 px-3 rounded-md font-medium transition-colors ${
-              filterType === tab
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            {tab === 'ALL' ? 'All Transactions' : tab}
-          </button>
-        ))}
-      </div>
+      {showForm && (
+        <form onSubmit={submit} className="rounded-xl border border-teal-200 dark:border-teal-900 bg-white dark:bg-slate-900 p-4 sm:p-5 space-y-4">
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Record Actual Expense</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="text-xs text-slate-600 dark:text-slate-300">Category
+              <select required value={category} onChange={e => setCategory(e.target.value as ExpenseCategory)} className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2">
+                {CATEGORIES.map(value => <option key={value}>{value}</option>)}
+              </select>
+            </label>
+            <label className="text-xs text-slate-600 dark:text-slate-300">Amount (₱) *
+              <input required type="number" min="0.01" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2" />
+            </label>
+            <label className="text-xs text-slate-600 dark:text-slate-300">Description *
+              <input required value={description} onChange={e => setDescription(e.target.value)} placeholder="e.g. Monthly electricity bill" className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2" />
+            </label>
+            <label className="text-xs text-slate-600 dark:text-slate-300">Payee / Supplier
+              <input value={payee} onChange={e => setPayee(e.target.value)} placeholder="Name of supplier or payee" className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2" />
+            </label>
+            <label className="text-xs text-slate-600 dark:text-slate-300">Expense Date *
+              <input required type="date" value={expenseDate} onChange={e => setExpenseDate(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2" />
+            </label>
+            <label className="text-xs text-slate-600 dark:text-slate-300">OR / Reference Number
+              <input value={referenceNumber} onChange={e => setReferenceNumber(e.target.value)} placeholder="Optional reference" className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2" />
+            </label>
+            <label className="text-xs text-slate-600 dark:text-slate-300 sm:col-span-2">Notes
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Additional details (optional)" className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2" />
+            </label>
+          </div>
+          <div className="flex justify-end">
+            <button type="submit" className="rounded-lg bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 text-xs font-semibold">Save Expense</button>
+          </div>
+        </form>
+      )}
 
-      {/* Ledger Table */}
-      <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="p-3">Invoice #</th>
-                <th className="p-3">Type</th>
-                <th className="p-3">Entity (Patient / Supplier)</th>
-                <th className="p-3">Reference</th>
-                <th className="p-3 text-right">Amount (₱)</th>
-                <th className="p-3">Due Date</th>
-                <th className="p-3">Status</th>
-                <th className="p-3 text-center">Update Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredBills.map(bill => (
-                <tr key={bill.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                  <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
-                    {bill.invoiceNumber}
-                  </td>
-                  <td className="p-3">
-                    <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-md ${
-                      bill.type === 'Patient Billing'
-                        ? 'bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300'
-                        : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
-                    }`}>
-                      {bill.type}
-                    </span>
-                  </td>
-                  <td className="p-3 font-medium text-slate-900 dark:text-white">
-                    {bill.entityName}
-                  </td>
-                  <td className="p-3 font-mono text-slate-500">{bill.referenceNumber}</td>
-                  <td className="p-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                    ₱{bill.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                  <td className="p-3 font-mono text-slate-500">{bill.dueDate}</td>
-                  <td className="p-3">
-                    <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-md ${
-                      bill.status === 'Paid'
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                        : bill.status === 'Overdue'
-                        ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                    }`}>
-                      {bill.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-center">
-                    <select
-                      value={bill.status}
-                      onChange={(e) => handleUpdateStatus(bill.id, e.target.value as BillingRecord['status'])}
-                      className="px-2 py-1 text-xs bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-md text-slate-800 dark:text-slate-200"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Billed">Billed</option>
-                      <option value="Paid">Mark Paid</option>
-                      <option value="HMO Pending">HMO Pending</option>
-                      <option value="Overdue">Overdue</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <section className="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 font-semibold text-sm"><ReceiptText className="w-4 h-4 text-teal-600" /> Expense History</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase">
+                <tr><th className="p-3">Date / Ref</th><th className="p-3">Description</th><th className="p-3">Category / Payee</th><th className="p-3 text-right">Amount</th></tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {expenses.map(item => <tr key={item.id}>
+                  <td className="p-3 whitespace-nowrap"><div>{item.expenseDate}</div><div className="text-[10px] text-slate-400">{item.referenceNumber || item.expenseNumber}</div></td>
+                  <td className="p-3 min-w-40"><div className="font-semibold text-slate-800 dark:text-slate-200">{item.description}</div><div className="text-[10px] text-slate-400">{item.notes}</div></td>
+                  <td className="p-3"><div>{item.category}</div><div className="text-[10px] text-slate-400">{item.payee}</div></td>
+                  <td className="p-3 text-right font-mono font-bold whitespace-nowrap">{money(item.amount)}</td>
+                </tr>)}
+                {expenses.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-slate-400">No expenses recorded yet. Add an expense to start monitoring actual spending.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+          <h3 className="font-semibold text-sm mb-3">Expenses by Category</h3>
+          {categoryTotals.length ? <div className="space-y-3">{categoryTotals.map(item => <div key={item.name}>
+            <div className="flex justify-between gap-2 text-xs mb-1"><span>{item.name}</span><strong>{money(item.total)}</strong></div>
+            <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden"><div className="h-full bg-teal-500 rounded-full" style={{ width: `${total ? item.total / total * 100 : 0}%` }} /></div>
+          </div>)}</div> : <p className="text-xs text-slate-400">Category totals will appear after expenses are recorded.</p>}
+        </section>
       </div>
-
     </div>
   );
 };
