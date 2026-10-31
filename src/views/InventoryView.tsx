@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState, useMemo } from 'react';
 import {
   Package,
@@ -24,6 +26,8 @@ interface InventoryViewProps {
 }
 
 export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenBulkModal }) => {
+  const pageTitle = usePageTitle('inventory', 'Medical Inventory & Unit Conversions');
+  const pageSubtitle = usePageSubtitle('inventory', 'View stock levels, item details, batch availability, and inventory valuation.')
   const [items, setItems] = useState<MedicalItem[]>(() => inventoryService.getItems());
   const [batches, setBatches] = useState<BatchLot[]>(() => inventoryService.getBatches());
   const [search, setSearch] = useState('');
@@ -163,8 +167,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ onOpenBulkModal })
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Package className="w-5 h-5 text-teal-600" />
-            Medical Inventory & Unit Conversions
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Formulary drug catalog, packaging ratios, batch expiration schedules, and bulk operations.
           </p>

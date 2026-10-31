@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import {
   Settings,
@@ -18,6 +20,40 @@ import {
 import { inventoryService } from '../services/inventoryService';
 import { HospitalMasterSettings } from '../types/inventory';
 
+const PAGE_TITLE_DEFAULTS: Record<string, string> = {
+  dashboard: 'Central Pharmacy & FEFO Dispensing Console',
+  inventory: 'Medical Inventory & Unit Conversions',
+  stock_in: 'Stock In & Supplier Receiving',
+  requests: 'Ward & Department Requisitions',
+  release: 'FEFO Stock Release & Automated Dispensing',
+  patient_usage: 'Patient Medication Consumption & Administration',
+  stock_adjustment: 'Stock Adjustments & Quarantine Transfers',
+  finance: 'Finance – Expense Monitoring',
+  monthly_overview: 'Monthly Inventory Overview',
+  reports: 'Safety Alerts & Compliance Reports',
+  users: 'User & Account Management',
+  settings: 'Locations & Master Facility Settings',
+  audit_logs: 'System Audit Trail & Security Events',
+  backup_restore: 'Database Backup & Disaster Recovery'
+};
+
+const PAGE_SUBTITLE_DEFAULTS: Record<string, string> = {
+  audit_logs: 'Track user actions, security events, and changes across the system.',
+  backup_restore: 'Create and restore backups to protect operational records.',
+  finance: 'Monitor actual center expenses, transactions, and spending categories.',
+  dashboard: 'Authoritative FEFO automatic dispatch, clinical expired lot blocking, and high-volume bulk stock operations.',
+  inventory: 'View stock levels, item details, batch availability, and inventory valuation.',
+  monthly_overview: 'Review monthly stock movement, balances, and inventory valuation.',
+  patient_usage: 'Record and review medication consumption for clinical documentation.',
+  release: 'Automatically dispatch eligible lots using First-Expiry, First-Out controls.',
+  reports: 'Review expiry, stock safety, and compliance reporting.',
+  requests: 'Manage ward and department requests for medicines and supplies.',
+  settings: 'Configure facility locations, page branding, storage shelves, and suppliers.',
+  stock_adjustment: 'Record authorized stock corrections, quarantine, and transfers.',
+  stock_in: 'Receive supplier deliveries and record incoming inventory batches.',
+  users: 'Manage staff accounts, access roles, and permissions.'
+};
+
 interface SettingsViewProps {
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
@@ -29,7 +65,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onToggleTheme,
   onRefreshSettings
 }) => {
-  const [settings, setSettings] = useState<HospitalMasterSettings>(() => inventoryService.getSettings());
+  const pageTitle = usePageTitle('settings', 'Locations & Master Facility Settings');
+  const pageSubtitle = usePageSubtitle('settings', 'Configure facility locations, page branding, storage shelves, and suppliers.')
+  const [settings, setSettings] = useState<HospitalMasterSettings>(() => { const current = inventoryService.getSettings(); return { ...current, pageTitles: { ...PAGE_TITLE_DEFAULTS, ...(current.pageTitles || {}) }, pageSubtitles: { ...PAGE_SUBTITLE_DEFAULTS, ...(current.pageSubtitles || {}) } }; });
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // New item inputs
@@ -187,6 +225,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   };
 
+  const handleSavePageTitles = () => {
+    inventoryService.updateSettings({ pageTitles: { ...PAGE_TITLE_DEFAULTS, ...(settings.pageTitles || {}) }, pageSubtitles: { ...PAGE_SUBTITLE_DEFAULTS, ...(settings.pageSubtitles || {}) } });
+    setSettings(inventoryService.getSettings());
+    onRefreshSettings();
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+  };
+
   return (
     <div className="space-y-6">
       
@@ -195,11 +241,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Settings className="w-5 h-5 text-teal-600" />
-            Locations & Master Facility Settings
+            {pageTitle}
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Configure system branding, ward options, bed naming, storage shelves, suppliers, logo upload, and dark mode.
-          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
         </div>
 
         {saveSuccess && (
@@ -209,6 +253,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Per-page editable titles */}
+      <section className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Individual Page Titles</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Edit each module title and subtitle independently. Changes are saved to this device's current app storage.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {Object.entries(PAGE_TITLE_DEFAULTS).map(([key, fallback]) => (
+            <label key={key} className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              {key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+              <input type="text" value={settings.pageTitles?.[key] ?? fallback}
+                onChange={e => setSettings(prev => ({ ...prev, pageTitles: { ...PAGE_TITLE_DEFAULTS, ...(prev.pageTitles || {}), [key]: e.target.value } }))}
+                className="mt-1 w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-normal" />
+              <span className="block mt-2">Subtitle / Description</span>
+              <textarea rows={2} value={settings.pageSubtitles?.[key] ?? PAGE_SUBTITLE_DEFAULTS[key]}
+                onChange={e => setSettings(prev => ({ ...prev, pageSubtitles: { ...PAGE_SUBTITLE_DEFAULTS, ...(prev.pageSubtitles || {}), [key]: e.target.value } }))}
+                className="mt-1 w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-normal" />
+            </label>
+          ))}
+        </div>
+        <button type="button" onClick={handleSavePageTitles} className="px-4 py-2 text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 rounded-lg">Save Page Titles</button>
+      </section>
 
       {/* Theme & Appearance Section */}
       <div className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">

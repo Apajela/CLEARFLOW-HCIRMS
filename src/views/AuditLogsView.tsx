@@ -1,9 +1,13 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import { ShieldAlert, Search, Filter, ShieldCheck, Lock, AlertTriangle } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
 import { AuditLog, AuditActionType } from '../types/inventory';
 
 export const AuditLogsView: React.FC = () => {
+  const pageTitle = usePageTitle('audit_logs', 'System Audit Trail & Security Events');
+  const pageSubtitle = usePageSubtitle('audit_logs', 'Track user actions, security events, and changes across the system.')
   const [logs] = useState<AuditLog[]>(() => inventoryService.getAuditLogs());
   const [search, setSearch] = useState('');
   const [selectedType, setSelectedType] = useState<string>('ALL');
@@ -50,8 +54,9 @@ export const AuditLogsView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-teal-600" />
-            System Audit Trail & Security Events
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Immutable log of all user activities, FEFO releases, password authorizations, security denials, and bulk updates.
           </p>

@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useMemo, useState } from 'react';
 import { Wallet, Plus, ReceiptText, TrendingDown } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
@@ -13,6 +15,8 @@ const money = (value: number) => `₱${value.toLocaleString('en-PH', {
 })}`;
 
 export const BillingFinanceView: React.FC = () => {
+  const pageTitle = usePageTitle('finance', 'Finance – Expense Monitoring');
+  const pageSubtitle = usePageSubtitle('finance', 'Monitor actual center expenses, transactions, and spending categories.')
   const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => inventoryService.getExpenseRecords());
   const [showForm, setShowForm] = useState(false);
   const [category, setCategory] = useState<ExpenseCategory>('Other');
@@ -64,8 +68,9 @@ export const BillingFinanceView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Wallet className="w-5 h-5 text-teal-600" />
-            Finance – Expense Monitoring
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Record and monitor the center's actual expenses. No patient billing or outstanding billing balances.
           </p>

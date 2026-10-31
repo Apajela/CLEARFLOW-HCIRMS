@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import { UserCheck, Plus, Printer, CheckCircle, Search, FileText } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
@@ -5,6 +7,8 @@ import { PatientUsageRecord } from '../types/inventory';
 import { PrintDocumentData, PrintModal } from '../components/PrintModal';
 
 export const PatientUsageView: React.FC = () => {
+  const pageTitle = usePageTitle('patient_usage', 'Patient Medication Consumption & Administration');
+  const pageSubtitle = usePageSubtitle('patient_usage', 'Record and review medication consumption for clinical documentation.')
   const [usages, setUsages] = useState<PatientUsageRecord[]>(() => inventoryService.getPatientUsages());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [printDoc, setPrintDoc] = useState<PrintDocumentData | null>(null);
@@ -129,8 +133,9 @@ export const PatientUsageView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <UserCheck className="w-5 h-5 text-teal-600" />
-            Patient Medication Consumption & Administration
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Track bedside medication usage by room/bed and attending physician for clinical documentation only.
           </p>

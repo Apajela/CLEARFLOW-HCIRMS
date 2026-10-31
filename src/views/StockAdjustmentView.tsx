@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import { SlidersHorizontal, Plus, AlertTriangle, ShieldCheck, CheckCircle2, FileText } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
@@ -5,6 +7,8 @@ import { StockAdjustmentRecord, AdjustmentType } from '../types/inventory';
 import { PasswordVerificationModal } from '../components/PasswordVerificationModal';
 
 export const StockAdjustmentView: React.FC = () => {
+  const pageTitle = usePageTitle('stock_adjustment', 'Stock Adjustments & Quarantine Transfers');
+  const pageSubtitle = usePageSubtitle('stock_adjustment', 'Record authorized stock corrections, quarantine, and transfers.')
   const [adjustments, setAdjustments] = useState<StockAdjustmentRecord[]>(() => inventoryService.getAdjustments());
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -68,8 +72,9 @@ export const StockAdjustmentView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <SlidersHorizontal className="w-5 h-5 text-teal-600" />
-            Stock Adjustments & Quarantine Transfers
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Log returns to supplier, ward returns, damaged goods, expired quarantine transfers, and discrepancy reconciliations.
           </p>

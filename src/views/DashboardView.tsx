@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React from 'react';
 import {
   TrendingUp,
@@ -23,6 +25,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigate,
   onOpenBulkModal
 }) => {
+  const pageTitle = usePageTitle('dashboard', 'Central Pharmacy & FEFO Dispensing Console');
+  const pageSubtitle = usePageSubtitle('dashboard', 'Authoritative FEFO automatic dispatch, clinical expired lot blocking, and high-volume bulk stock operations.')
   const items = inventoryService.getItems();
   const batches = inventoryService.getBatches();
   const requests = inventoryService.getRequests();
@@ -52,11 +56,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-xs text-slate-300">· Real-Time Clinical Inventory</span>
           </div>
           <h2 className="text-lg sm:text-xl font-bold tracking-tight">
-            Central Pharmacy & FEFO Dispensing Console
+            {pageTitle}
           </h2>
-          <p className="text-xs text-teal-100/80 max-w-xl">
-            Authoritative FEFO automatic dispatch, clinical expired lot blocking, and high-volume bulk stock operations.
-          </p>
+          <p className="text-xs text-teal-100/80 max-w-xl">{pageSubtitle}</p>
         </div>
 
         <div className="flex items-center gap-2">

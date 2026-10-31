@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState, useEffect } from 'react';
 import { Send, AlertTriangle, ShieldCheck, Printer, CheckCircle, Clock, Check, X } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
@@ -10,6 +12,8 @@ interface ReleaseViewProps {
 }
 
 export const ReleaseView: React.FC<ReleaseViewProps> = ({ initialRequestId }) => {
+  const pageTitle = usePageTitle('release', 'FEFO Stock Release & Automated Dispensing');
+  const pageSubtitle = usePageSubtitle('release', 'Automatically dispatch eligible lots using First-Expiry, First-Out controls.')
   const [releases, setReleases] = useState<StockRelease[]>(() => inventoryService.getReleases());
   const [printDoc, setPrintDoc] = useState<PrintDocumentData | null>(null);
 
@@ -132,8 +136,9 @@ export const ReleaseView: React.FC<ReleaseViewProps> = ({ initialRequestId }) =>
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Send className="w-5 h-5 text-teal-600" />
-            FEFO Stock Release & Automated Dispensing
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Pinakamalapit na expiry ang unang ilalabas. Strict quarantine locks on expired batches.
           </p>

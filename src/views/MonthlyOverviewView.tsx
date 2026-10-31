@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import {
   BarChart3,
@@ -26,6 +28,8 @@ type SubReportTab =
   | 'valuation';
 
 export const MonthlyOverviewView: React.FC = () => {
+  const pageTitle = usePageTitle('monthly_overview', 'Monthly Inventory Overview — October 2026');
+  const pageSubtitle = usePageSubtitle('monthly_overview', 'Review monthly stock movement, balances, and inventory valuation.')
   const [activeSubReport, setActiveSubReport] = useState<SubReportTab>('balance');
   const [printDoc, setPrintDoc] = useState<PrintDocumentData | null>(null);
 
@@ -93,8 +97,9 @@ export const MonthlyOverviewView: React.FC = () => {
             <span className="text-xs text-slate-500 font-mono">Cycle: October 2026</span>
           </div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-1">
-            Monthly Inventory Overview — October 2026
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
         </div>
 
         <button

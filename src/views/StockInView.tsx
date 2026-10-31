@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import { ArrowDownToLine, Plus, Printer, CheckCircle2, AlertCircle, Trash2, Calendar, FileText } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
@@ -6,6 +8,8 @@ import { PrintDocumentData, PrintModal } from '../components/PrintModal';
 import { PasswordVerificationModal } from '../components/PasswordVerificationModal';
 
 export const StockInView: React.FC = () => {
+  const pageTitle = usePageTitle('stock_in', 'Stock In & Supplier Receiving');
+  const pageSubtitle = usePageSubtitle('stock_in', 'Receive supplier deliveries and record incoming inventory batches.')
   const [stockIns, setStockIns] = useState<StockInRecord[]>(() => inventoryService.getStockInRecords());
   const [isReceivingModalOpen, setIsReceivingModalOpen] = useState(false);
 
@@ -155,8 +159,9 @@ export const StockInView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <ArrowDownToLine className="w-5 h-5 text-teal-600" />
-            Stock In & Supplier Receiving
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Log Delivery Receipts (DR #), Purchase Orders, lot batch creation, and payable invoices.
           </p>

@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import { Users, Plus, Shield, ShieldCheck, Edit2, Trash2, Key, Check, X } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
@@ -24,6 +26,8 @@ const PERMISSION_LABELS: Record<PermissionKey, { label: string; desc: string }> 
 };
 
 export const UserManagementView: React.FC = () => {
+  const pageTitle = usePageTitle('users', 'User & Account Management');
+  const pageSubtitle = usePageSubtitle('users', 'Manage staff accounts, access roles, and permissions.')
   const [users, setUsers] = useState<UserAccount[]>(() => inventoryService.getUsers());
   const currentUser = inventoryService.getCurrentUser();
 
@@ -142,8 +146,9 @@ export const UserManagementView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Users className="w-5 h-5 text-teal-600" />
-            User & Account Management
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Full Access administrators configure staff permissions determining what regular accounts can view and execute.
           </p>

@@ -1,8 +1,12 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import { Database, Download, Upload, RotateCcw, AlertTriangle, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
 
 export const BackupRestoreView: React.FC = () => {
+  const pageTitle = usePageTitle('backup_restore', 'Database Backup & Disaster Recovery');
+  const pageSubtitle = usePageSubtitle('backup_restore', 'Create and restore backups to protect operational records.')
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -61,8 +65,9 @@ export const BackupRestoreView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Database className="w-5 h-5 text-teal-600" />
-            Database Backup & Disaster Recovery
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Export complete database state as JSON snapshot, restore previous archives, or reset demo data.
           </p>

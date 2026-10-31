@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import { FileText, AlertTriangle, Clock, ShieldAlert, UserCheck, Printer, Search } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
@@ -6,6 +8,8 @@ import { PrintDocumentData, PrintModal } from '../components/PrintModal';
 type ReportTab = 'low_stock' | 'expiring' | 'expired' | 'patient_usage';
 
 export const ReportsView: React.FC = () => {
+  const pageTitle = usePageTitle('reports', 'Safety Alerts & Compliance Reports');
+  const pageSubtitle = usePageSubtitle('reports', 'Review expiry, stock safety, and compliance reporting.')
   const [activeTab, setActiveTab] = useState<ReportTab>('low_stock');
   const [printDoc, setPrintDoc] = useState<PrintDocumentData | null>(null);
 
@@ -90,8 +94,9 @@ export const ReportsView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <FileText className="w-5 h-5 text-teal-600" />
-            Safety Alerts & Compliance Reports
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Real-time monitoring for low stock, expiring lots (&lt;90 days), expired quarantine audits, and patient consumption.
           </p>

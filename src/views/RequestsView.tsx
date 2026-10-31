@@ -1,3 +1,5 @@
+import { usePageSubtitle } from '../hooks/usePageSubtitle';
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import { ClipboardList, Plus, CheckCircle, XCircle, Send, Printer, Clock } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
@@ -10,6 +12,8 @@ interface RequestsViewProps {
 }
 
 export const RequestsView: React.FC<RequestsViewProps> = ({ onNavigateToRelease }) => {
+  const pageTitle = usePageTitle('requests', 'Ward & Department Requisitions');
+  const pageSubtitle = usePageSubtitle('requests', 'Manage ward and department requests for medicines and supplies.')
   const [requests, setRequests] = useState<RequisitionRequest[]>(() => inventoryService.getRequests());
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [printDoc, setPrintDoc] = useState<PrintDocumentData | null>(null);
@@ -142,8 +146,9 @@ export const RequestsView: React.FC<RequestsViewProps> = ({ onNavigateToRelease 
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <ClipboardList className="w-5 h-5 text-teal-600" />
-            Ward & Department Requisitions
+            {pageTitle}
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{pageSubtitle}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Submit medication orders, review clinical urgencies, and link approved requisitions to FEFO release.
           </p>
