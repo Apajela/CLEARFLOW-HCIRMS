@@ -35,12 +35,21 @@ export default function App() {
   // Settings update trigger to re-render header branding
   const [, setSettingsUpdateKey] = useState(0);
 
-  useEffect(() => {
-    // Sync theme
-    inventoryService.setTheme(theme);
-  }, [theme]);
+useEffect(() => {
+  // Sync theme
+  inventoryService.setTheme(theme);
+}, [theme]);
 
-  const handleToggleTheme = () => {
+useEffect(() => {
+  const loadInventoryFromApi = async () => {
+    await inventoryService.refreshItemsFromApi();
+    setInventoryRefreshKey((key) => key + 1);
+  };
+
+  loadInventoryFromApi();
+}, []);
+
+const handleToggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
     setTheme(next);
     inventoryService.setTheme(next);
