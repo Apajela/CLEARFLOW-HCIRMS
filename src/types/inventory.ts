@@ -315,6 +315,8 @@ export interface HospitalMasterSettings {
   patientLocations: string[];
   storageShelves: string[];
   accreditedSuppliers: string[];
+  pageTitles?: Record<string, string>;
+  pageSubtitles?: Record<string, string>;
 }
 
 export interface MonthlyOverviewData {
